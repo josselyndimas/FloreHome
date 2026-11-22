@@ -1,0 +1,1 @@
+Server=localhost;Port=3306;Database=florehome;Uid=root;Pwd=YOUR_MYSQL_PASSWORD;

@@ -31,7 +31,7 @@ public sealed class NuevaFacturaView : UserControl
     private DataTable _productos = new DataTable();
 
     private const string MarcaCategoria = "Elige una categoría";
-    private const string ClienteGeneral = "Cliente general";
+    private const string ClienteGeneral = "Sin cliente registrado";
 
     private int _idCliente;
     private string _nombreCliente = ClienteGeneral;
@@ -189,7 +189,7 @@ public sealed class NuevaFacturaView : UserControl
         };
         var btnBuscar = Tema.Boton("Buscar cliente", Estilo.Secundario);
         var btnNuevo = Tema.Boton("+ Nuevo", Estilo.Secundario);
-        var btnFinal = Tema.Boton(ClienteGeneral, Estilo.Secundario);
+        var btnFinal = Tema.Boton("Sin cliente", Estilo.Secundario);
         foreach (var b in new[] { btnBuscar, btnNuevo, btnFinal })
             b.MinimumSize = new Size(Tema.Px(90), Tema.Px(38));
         btnBuscar.Click += (s, e) => BuscarCliente();
@@ -821,11 +821,13 @@ public sealed class NuevaFacturaView : UserControl
             return;
         }
 
+        var vendidos = _lineas.AsEnumerable().Select(l => Convert.ToInt32(l["Id"])).ToList();
         _lineas.Rows.Clear();
         SeleccionarCliente(0, ClienteGeneral);
         _rbConsumidor.Checked = true;
         _pago.SelectedIndex = 0;
         CargarProductos();
+        Alertas.RevisarProductos(vendidos);       // ¿quedó algún producto con poco stock?
         OfrecerComprobante((int)idFactura);
     }
 

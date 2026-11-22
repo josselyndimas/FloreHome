@@ -229,6 +229,7 @@ public sealed class FacturasView : VistaLista
                 tx.Rollback();
                 throw;
             }
+            Alertas.RevisarProductos(null);           // el stock regresó: se limpian las alertas que ya no aplican
             Recargar();
         }
         catch (Exception ex) { ErrorMsg("No se pudo anular la factura.", ex); }

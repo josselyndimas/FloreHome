@@ -255,6 +255,7 @@ public sealed class ProductoDialog : DialogoBase
                     "UPDATE Producto SET Descripcion=@d, Categoria=@c, Cantidad=@q, Precio=@p WHERE Idproducto=@id",
                     ("@d", desc), ("@c", cat), ("@q", cantidad), ("@p", precio), ("@id", _id.Value));
             }
+            Alertas.RevisarProductos(null);           // actualiza las alertas de stock
             return true;
         }
         catch (Exception ex)

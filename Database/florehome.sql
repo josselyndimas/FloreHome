@@ -68,3 +68,24 @@ CREATE TABLE IF NOT EXISTS Detallefactura (
     CONSTRAINT fk_detalle_factura  FOREIGN KEY (idfactura)  REFERENCES Factura(Idfactura) ON DELETE CASCADE,
     CONSTRAINT fk_detalle_producto FOREIGN KEY (idproducto) REFERENCES Producto(Idproducto)
 );
+
+-- Ajustes internos de la app (versiones del formato de datos)
+CREATE TABLE IF NOT EXISTS Ajustes (
+    Clave VARCHAR(50)  PRIMARY KEY,
+    Valor VARCHAR(100) NOT NULL
+);
+
+-- Notificaciones de stock bajo / agotado (una por usuario)
+CREATE TABLE IF NOT EXISTS Notificacion (
+    Id           INT AUTO_INCREMENT PRIMARY KEY,
+    IdUsuario    INT          NOT NULL,
+    Tipo         VARCHAR(20)  NOT NULL,          -- StockBajo / Agotado
+    IdProducto   INT          NULL,
+    Mensaje      VARCHAR(250) NOT NULL,
+    Fecha        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Leida        TINYINT(1)   NOT NULL DEFAULT 0,
+    FechaLectura DATETIME     NULL,
+    INDEX ix_notificacion_usuario (IdUsuario, Leida),
+    CONSTRAINT fk_notificacion_usuario  FOREIGN KEY (IdUsuario)  REFERENCES Usuario(IdUsuario)   ON DELETE CASCADE,
+    CONSTRAINT fk_notificacion_producto FOREIGN KEY (IdProducto) REFERENCES Producto(Idproducto) ON DELETE CASCADE
+);

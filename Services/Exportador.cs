@@ -393,6 +393,7 @@ public static class Exportador
             // Consumidor final: no se menciona el IVA
             Linea("Productos", Formato(bruto), false);
             if (descuento > 0) Linea("Descuento cliente frecuente", "-" + Formato(descuento), false);
+            y -= 6;     // la línea queda pegada a "Productos": no se deja el hueco donde iría el IVA
         }
         p.Linea(margen + util - 220, y, margen + util, y, CCafe, 1);
         y += 8;

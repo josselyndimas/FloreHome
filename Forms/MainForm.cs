@@ -9,6 +9,8 @@ public sealed class MainForm : Form
     private readonly Panel _contenido = new Panel();
     private readonly List<Button> _botonesMenu = new List<Button>();
     private readonly Font _fuenteMenu = new Font("Segoe UI", 11f);
+    private readonly Campana _campana = new Campana();
+    private DateTime _ultimoCierre = DateTime.MinValue;
 
     public bool CerrarSesionSolicitado { get; private set; }
 
@@ -132,14 +134,62 @@ public sealed class MainForm : Form
         lateral.Controls.Add(menu, 0, 1);
         lateral.Controls.Add(pie, 0, 2);
 
-        // ---------- Contenido ----------
+        // ---------- Contenido (barra superior con la campanita + pantalla) ----------
         _contenido.Dock = DockStyle.Fill;
         _contenido.BackColor = Tema.Fondo;
 
-        Controls.Add(_contenido);   // primero el que llena…
-        Controls.Add(lateral);      // …y después el que se acopla al borde
+        var barra = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = Tema.Px(56),
+            BackColor = Tema.Fondo,
+            Padding = new Padding(0, Tema.Px(6), Tema.Px(24), 0)
+        };
+        _campana.Dock = DockStyle.Right;
+        _campana.Width = Tema.Px(48);
+        _campana.Click += (s, e) => AbrirNotificaciones();
+        barra.Controls.Add(_campana);
+
+        var derecha = new Panel { Dock = DockStyle.Fill, BackColor = Tema.Fondo };
+        derecha.Controls.Add(_contenido);   // primero el que llena…
+        derecha.Controls.Add(barra);        // …y después la barra que se acopla arriba
+
+        Controls.Add(derecha);
+        Controls.Add(lateral);
+
+        Alertas.Cambio += ActualizarCampana;
+        Shown += (s, e) => Alertas.RevisarAlIniciar(Sesion.IdUsuario);   // avisa de lo que esté bajo al iniciar sesión
+        ActualizarCampana();
 
         Mostrar(btnProductos, () => new ProductosView());
+    }
+
+    private void ActualizarCampana()
+    {
+        if (IsDisposed) return;
+        _campana.Conteo = Alertas.ContarNoLeidas(Sesion.IdUsuario);
+    }
+
+    private void AbrirNotificaciones()
+    {
+        // Si el panel acaba de cerrarse porque se hizo clic en la campana, no lo vuelvas a abrir
+        if ((DateTime.Now - _ultimoCierre).TotalMilliseconds < 300) return;
+
+        var panel = new NotificacionesForm();
+        panel.Location = _campana.PointToScreen(new Point(_campana.Width - panel.Width, _campana.Height + Tema.Px(4)));
+        panel.FormClosed += (s, e) =>
+        {
+            _ultimoCierre = DateTime.Now;
+            panel.Dispose();
+            ActualizarCampana();
+        };
+        panel.Show(this);
+    }
+
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        Alertas.Cambio -= ActualizarCampana;
+        base.OnFormClosed(e);
     }
 
     private Button CrearBotonMenu(string texto, Func<Control> crear, int ancho)
