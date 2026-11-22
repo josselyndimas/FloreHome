@@ -19,8 +19,8 @@ public sealed class NuevaFacturaView : UserControl
     private readonly ComboBox _pago = Tema.Combo(Fiscal.MetodosPago);
     private readonly DataGridView _carrito = new DataGridView();
     private readonly DataTable _lineas = new DataTable();
-    private readonly RadioButton _rbConsumidor = new RadioButton();
-    private readonly RadioButton _rbCredito = new RadioButton();
+    private readonly ComboBox _tipoFactura = Tema.Combo(Fiscal.ConsumidorFinal, Fiscal.CreditoFiscal);
+    private Button _btnQuitarCliente;
     private Label _etiSuma;
     private readonly Label _lblSuma = new Label();
     private readonly Label _lblDescuento = new Label();
@@ -36,7 +36,7 @@ public sealed class NuevaFacturaView : UserControl
     private int _idCliente;
     private string _nombreCliente = ClienteGeneral;
 
-    private bool EsCreditoFiscal => _rbCredito.Checked;
+    private bool EsCreditoFiscal => _tipoFactura.SelectedIndex == 1;
 
     public NuevaFacturaView()
     {
@@ -139,32 +139,6 @@ public sealed class NuevaFacturaView : UserControl
         };
 
         // ---- Parte de arriba: tipo de factura y cliente ----
-        var lblTipo = Tema.Etiqueta("Tipo de factura", true);
-        lblTipo.Dock = DockStyle.Top;
-        lblTipo.Padding = new Padding(0, 0, 0, Tema.Px(4));
-
-        var tipos = new FlowLayoutPanel
-        {
-            AutoSize = true,
-            AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            WrapContents = true,
-            Dock = DockStyle.Top,
-            Padding = new Padding(0, 0, 0, Tema.Px(10))
-        };
-        foreach (var rb in new[] { _rbConsumidor, _rbCredito })
-        {
-            rb.AutoSize = true;
-            rb.Font = Tema.FPrecio;
-            rb.ForeColor = Tema.Cafe;
-            rb.Margin = new Padding(0, 0, Tema.Px(22), 0);
-            rb.Cursor = Cursors.Hand;
-            rb.CheckedChanged += (s, e) => ActualizarTotales();
-        }
-        _rbConsumidor.Text = Fiscal.ConsumidorFinal;
-        _rbCredito.Text = Fiscal.CreditoFiscal;
-        _rbConsumidor.Checked = true;
-        tipos.Controls.Add(_rbConsumidor);
-        tipos.Controls.Add(_rbCredito);
 
         var lblTituloCliente = Tema.Etiqueta("Cliente", true);
         lblTituloCliente.Dock = DockStyle.Top;
@@ -189,15 +163,24 @@ public sealed class NuevaFacturaView : UserControl
         };
         var btnBuscar = Tema.Boton("Buscar cliente", Estilo.Secundario);
         var btnNuevo = Tema.Boton("+ Nuevo", Estilo.Secundario);
-        var btnFinal = Tema.Boton("Sin cliente", Estilo.Secundario);
-        foreach (var b in new[] { btnBuscar, btnNuevo, btnFinal })
+        var btnQuitar = Tema.Boton("Quitar cliente", Estilo.Secundario);
+        foreach (var b in new[] { btnBuscar, btnNuevo, btnQuitar })
             b.MinimumSize = new Size(Tema.Px(90), Tema.Px(38));
+        btnQuitar.Visible = false;                 // solo aparece cuando hay un cliente elegido
+        _btnQuitarCliente = btnQuitar;
         btnBuscar.Click += (s, e) => BuscarCliente();
         btnNuevo.Click += (s, e) => NuevoCliente();
-        btnFinal.Click += (s, e) => SeleccionarCliente(0, ClienteGeneral);
+        btnQuitar.Click += (s, e) => SeleccionarCliente(0, ClienteGeneral);
+
+        _tipoFactura.Font = Tema.FNegrita;
+        _tipoFactura.Width = Tema.Px(190);
+        _tipoFactura.Margin = new Padding(0, Tema.Px(6), Tema.Px(20), 0);
+        _tipoFactura.SelectedIndexChanged += (s, e) => ActualizarTotales();
+
         accionesCliente.Controls.Add(btnBuscar);
         accionesCliente.Controls.Add(btnNuevo);
-        accionesCliente.Controls.Add(btnFinal);
+        accionesCliente.Controls.Add(_tipoFactura);
+        accionesCliente.Controls.Add(btnQuitar);
 
         _chkFrecuente.Text = "Cliente frecuente: aplicar 10 % de descuento";
         _chkFrecuente.AutoSize = true;
@@ -307,8 +290,6 @@ public sealed class NuevaFacturaView : UserControl
         lateral.Controls.Add(accionesCliente);
         lateral.Controls.Add(_lblCliente);
         lateral.Controls.Add(lblTituloCliente);
-        lateral.Controls.Add(tipos);
-        lateral.Controls.Add(lblTipo);
         return lateral;
     }
 
@@ -414,6 +395,7 @@ public sealed class NuevaFacturaView : UserControl
         _idCliente = id;
         _nombreCliente = nombre;
         _lblCliente.Text = nombre;
+        if (_btnQuitarCliente != null) _btnQuitarCliente.Visible = id > 0;
 
         // Cliente frecuente: cada 6 compras de más de $25, la siguiente lleva 10 % de descuento
         bool elegible = false;
@@ -824,7 +806,7 @@ public sealed class NuevaFacturaView : UserControl
         var vendidos = _lineas.AsEnumerable().Select(l => Convert.ToInt32(l["Id"])).ToList();
         _lineas.Rows.Clear();
         SeleccionarCliente(0, ClienteGeneral);
-        _rbConsumidor.Checked = true;
+        _tipoFactura.SelectedIndex = 0;
         _pago.SelectedIndex = 0;
         CargarProductos();
         Alertas.RevisarProductos(vendidos);       // ¿quedó algún producto con poco stock?

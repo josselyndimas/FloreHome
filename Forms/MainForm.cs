@@ -158,7 +158,11 @@ public sealed class MainForm : Form
         Controls.Add(lateral);
 
         Alertas.Cambio += ActualizarCampana;
-        Shown += (s, e) => Alertas.RevisarAlIniciar(Sesion.IdUsuario);   // avisa de lo que esté bajo al iniciar sesión
+        Shown += (s, e) =>
+        {
+            Alertas.RegistrarInicioSesion(Sesion.IdUsuario);   // "Iniciaste sesión" con fecha y hora
+            Alertas.RevisarAlIniciar(Sesion.IdUsuario);        // y avisa de lo que esté bajo de stock
+        };
         ActualizarCampana();
 
         Mostrar(btnProductos, () => new ProductosView());

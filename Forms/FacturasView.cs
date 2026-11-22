@@ -16,6 +16,7 @@ public sealed class FacturasView : VistaLista
     private readonly DateTimePicker _desde = new DateTimePicker();
     private readonly DateTimePicker _hasta = new DateTimePicker();
     private readonly Label _resumen = new Label();
+    private readonly Label _tituloDetalle = new Label();
     private readonly DataGridView _detalle = new DataGridView();
     private static readonly Font FTachado = new Font(Tema.FNormal, FontStyle.Strikeout);
     private bool _cargando = true;
@@ -49,6 +50,12 @@ public sealed class FacturasView : VistaLista
         _resumen.ForeColor = Tema.Cafe;
         _resumen.Dock = DockStyle.Top;
         _resumen.Padding = new Padding(0, 0, 0, Tema.Px(8));
+        _tituloDetalle.AutoSize = true;
+        _tituloDetalle.Font = Tema.FNegrita;
+        _tituloDetalle.ForeColor = Tema.CafeClaro;
+        _tituloDetalle.Dock = DockStyle.Top;
+        _tituloDetalle.Padding = new Padding(0, 0, 0, Tema.Px(6));
+        _tituloDetalle.Text = "Productos de la factura seleccionada";
 
         Tema.EstilizarGrid(_detalle);
         _detalle.Dock = DockStyle.Fill;
@@ -62,6 +69,7 @@ public sealed class FacturasView : VistaLista
         PanelExtra.Height = Tema.Px(240);
         PanelExtra.Visible = true;
         PanelExtra.Controls.Add(_detalle);
+        PanelExtra.Controls.Add(_tituloDetalle);
         PanelExtra.Controls.Add(_resumen);
 
         _desde.ValueChanged += (s, e) => { if (!_cargando) Recargar(); };
@@ -162,7 +170,13 @@ public sealed class FacturasView : VistaLista
     private void CargarDetalle()
     {
         var f = Seleccion();
-        if (f == null) { _detalle.DataSource = null; return; }
+        if (f == null)
+        {
+            _detalle.DataSource = null;
+            _tituloDetalle.Text = "Productos de la factura seleccionada";
+            return;
+        }
+        _tituloDetalle.Text = "Productos de la factura N° " + Convert.ToInt32(f["Id"]).ToString("D6");
         try
         {
             _detalle.DataSource = Db.Tabla(

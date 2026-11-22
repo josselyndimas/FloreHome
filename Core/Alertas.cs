@@ -17,6 +17,24 @@ public static class Alertas
     /// <summary>Al iniciar sesión: revisa todo el inventario y avisa solo a ese usuario.</summary>
     public static void RevisarAlIniciar(int idUsuario) => Revisar(null, idUsuario);
 
+    /// <summary>Deja constancia de cada inicio de sesión (solo el más reciente queda sin leer).</summary>
+    public static void RegistrarInicioSesion(int idUsuario)
+    {
+        try
+        {
+            Db.Ejecutar(
+                "UPDATE Notificacion SET Leida = 1, FechaLectura = NOW() WHERE IdUsuario = @u AND Tipo = 'Sesion' AND Leida = 0",
+                ("@u", idUsuario));
+            Db.Ejecutar(
+                "INSERT INTO Notificacion (IdUsuario, Tipo, Mensaje) VALUES (@u, 'Sesion', @m)",
+                ("@u", idUsuario), ("@m", "Iniciaste sesión en FloreHome."));
+        }
+        catch
+        {
+        }
+        Cambio?.Invoke();
+    }
+
     /// <summary>Después de vender, editar o anular: revisa esos productos (o todos si es null) para todos los usuarios.</summary>
     public static void RevisarProductos(IEnumerable<int> ids) => Revisar(ids == null ? null : ids.ToList(), 0);
 

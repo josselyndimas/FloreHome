@@ -347,7 +347,7 @@ public static class Exportador
             {
                 PdfDocumento.Ajustar(Convert.ToString(det.Rows[r]["Descripcion"]), 9, false, col[0] - 12),
                 Convert.ToString(det.Rows[r]["cantidad"]),
-                credito ? Formato(Fiscal.SinIva(Convert.ToDecimal(det.Rows[r]["Precio"]))) : Formato(det.Rows[r]["Precio"]),
+                credito ? "$" + (Convert.ToDecimal(det.Rows[r]["Precio"]) / (1 + Fiscal.TasaIva)).ToString("0.0000", CultureInfo.InvariantCulture) : Formato(det.Rows[r]["Precio"]),
                 credito ? Formato(Fiscal.SinIva(Convert.ToDecimal(det.Rows[r]["Total"]))) : Formato(det.Rows[r]["Total"])
             };
             double x = margen;
@@ -393,7 +393,7 @@ public static class Exportador
             // Consumidor final: no se menciona el IVA
             Linea("Productos", Formato(bruto), false);
             if (descuento > 0) Linea("Descuento cliente frecuente", "-" + Formato(descuento), false);
-            y -= 6;     // la línea queda pegada a "Productos": no se deja el hueco donde iría el IVA
+            y += 18;    // fila vacía: el mismo espacio que ocupa el IVA en crédito fiscal
         }
         p.Linea(margen + util - 220, y, margen + util, y, CCafe, 1);
         y += 8;

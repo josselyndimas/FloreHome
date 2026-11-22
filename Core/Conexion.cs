@@ -8,7 +8,7 @@ namespace FloreHome.Core;
 /// </summary>
 public static class Conexion
 {
-    private const string Defecto = "Server=localhost;Port=3306;Database=florehome;Uid=root;Pwd=;";
+    private const string Defecto = "Server=localhost;Port=3306;Database=florehome;Uid=root;Pwd=D(imas26);";
 
     public static string Cadena { get; } = Cargar();
 

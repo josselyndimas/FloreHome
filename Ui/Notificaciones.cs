@@ -12,6 +12,8 @@ public class Campana : Control
     private int _conteo;
     private bool _encima;
 
+    [System.ComponentModel.DesignerSerializationVisibility(
+    System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public int Conteo
     {
         get => _conteo;
@@ -133,10 +135,10 @@ public sealed class ItemNotificacion : Control
         g.Clear(fondo);
         g.SmoothingMode = SmoothingMode.AntiAlias;
 
-        // punto de color: sin leer = rojo (agotado) o ámbar (stock bajo)
+        // punto de color: sin leer = rojo (agotado), Inicio de sesion ámbar (y stock bajo)
         if (!_leida)
         {
-            using (var punto = new SolidBrush(_tipo == "Agotado" ? Rojo : Ambar))
+            using (var punto = new SolidBrush(_tipo == "Agotado" ? Rojo : (_tipo == "Sesion" ? Tema.CafeClaro : Ambar)))
                 g.FillEllipse(punto, Tema.Px(14), Tema.Px(16), Tema.Px(11), Tema.Px(11));
         }
 
