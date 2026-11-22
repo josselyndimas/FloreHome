@@ -1,4 +1,5 @@
 using System.Drawing.Drawing2D;
+using System.ComponentModel;
 
 namespace FloreHome.Ui;
 
@@ -165,9 +166,13 @@ public class PixelBox : Control
 {
     private Image _imagen;
     private bool _suavizado;
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool MostrarBorde { get; set; } = true;
+
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string TextoVacio { get; set; } = "Sin imagen";
 
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Image Imagen
     {
         get => _imagen;
@@ -175,6 +180,7 @@ public class PixelBox : Control
     }
 
     /// <summary>true para fotos normales (se escalan suave); false para pixel art (cuadros nítidos).</summary>
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool Suavizado
     {
         get => _suavizado;
@@ -376,4 +382,18 @@ public class DialogoBase : Form
 
     protected void ErrorBD(string mensaje, Exception ex) =>
         MessageBox.Show(this, mensaje + "\n\n" + ex.Message, "FloreHome", MessageBoxButtons.OK, MessageBoxIcon.Error);
+}
+
+/// <summary>Colores del menú desplegable (mismo celeste de los botones).</summary>
+public class TablaColoresTema : ProfessionalColorTable
+{
+    public override Color MenuItemSelected => Tema.MentaSel;
+    public override Color MenuItemBorder => Tema.MentaSel;
+    public override Color MenuItemSelectedGradientBegin => Tema.MentaSel;
+    public override Color MenuItemSelectedGradientEnd => Tema.MentaSel;
+    public override Color MenuBorder => Tema.Gris;
+    public override Color ToolStripDropDownBackground => Tema.Menta;
+    public override Color ImageMarginGradientBegin => Tema.Menta;
+    public override Color ImageMarginGradientMiddle => Tema.Menta;
+    public override Color ImageMarginGradientEnd => Tema.Menta;
 }

@@ -42,11 +42,15 @@ public static class Alertas
     {
         try
         {
-            // Lo que ya se repuso deja de ser alerta
+            // Lo que ya se repuso deja de ser alerta (se borra para poder avisar de nuevo si vuelve a bajar)
             Db.Ejecutar(
-                "UPDATE Notificacion SET Leida = 1, FechaLectura = NOW() WHERE Leida = 0 " +
+                "DELETE FROM Notificacion WHERE Tipo IN ('StockBajo', 'Agotado') " +
                 "AND IdProducto IN (SELECT Idproducto FROM Producto WHERE Cantidad > @u)",
                 ("@u", UmbralStockBajo));
+            // Si ya no está agotado (aunque siga bajo), el aviso de "agotado" se reinicia
+            Db.Ejecutar(
+                "DELETE FROM Notificacion WHERE Tipo = 'Agotado' " +
+                "AND IdProducto IN (SELECT Idproducto FROM Producto WHERE Cantidad > 0)");
 
             string filtro = ids == null ? "" : (ids.Count == 0 ? " AND 1 = 0" : " AND Idproducto IN (" + string.Join(",", ids) + ")");
             DataTable productos = Db.Tabla(
@@ -79,10 +83,15 @@ public static class Alertas
                                 "WHERE IdUsuario = @u AND IdProducto = @p AND Tipo = 'StockBajo' AND Leida = 0",
                                 ("@u", usuario), ("@p", idProducto));
 
-                        int sinLeer = Db.Contar(
-                            "SELECT COUNT(*) FROM Notificacion WHERE IdUsuario = @u AND IdProducto = @p AND Tipo = @t AND Leida = 0",
+                        // si el aviso sigue sin leer, se actualiza la cantidad que muestra
+                        Db.Ejecutar(
+                            "UPDATE Notificacion SET Mensaje = @m WHERE IdUsuario = @u AND IdProducto = @p AND Tipo = @t AND Leida = 0",
+                            ("@m", mensaje), ("@u", usuario), ("@p", idProducto), ("@t", tipo));
+
+                        int yaAvisado = Db.Contar(
+                            "SELECT COUNT(*) FROM Notificacion WHERE IdUsuario = @u AND IdProducto = @p AND Tipo = @t",
                             ("@u", usuario), ("@p", idProducto), ("@t", tipo));
-                        if (sinLeer > 0) continue;
+                        if (yaAvisado > 0) continue;     // ya se le avisó (leída o no): no se repite hasta que se reponga
 
                         Db.Ejecutar(
                             "INSERT INTO Notificacion (IdUsuario, Tipo, IdProducto, Mensaje) VALUES (@u, @t, @p, @m)",

@@ -19,7 +19,9 @@ public sealed class NuevaFacturaView : UserControl
     private readonly ComboBox _pago = Tema.Combo(Fiscal.MetodosPago);
     private readonly DataGridView _carrito = new DataGridView();
     private readonly DataTable _lineas = new DataTable();
-    private readonly ComboBox _tipoFactura = Tema.Combo(Fiscal.ConsumidorFinal, Fiscal.CreditoFiscal);
+    private readonly Button _tipoFactura = Tema.Boton(Fiscal.ConsumidorFinal + "  ▾", Estilo.Secundario);
+    private ContextMenuStrip _menuTipos;
+    private int _tipoIndex;     // 0 = consumidor final, 1 = crédito fiscal
     private Button _btnQuitarCliente;
     private Label _etiSuma;
     private readonly Label _lblSuma = new Label();
@@ -36,7 +38,7 @@ public sealed class NuevaFacturaView : UserControl
     private int _idCliente;
     private string _nombreCliente = ClienteGeneral;
 
-    private bool EsCreditoFiscal => _tipoFactura.SelectedIndex == 1;
+    private bool EsCreditoFiscal => _tipoIndex == 1;
 
     public NuevaFacturaView()
     {
@@ -172,10 +174,8 @@ public sealed class NuevaFacturaView : UserControl
         btnNuevo.Click += (s, e) => NuevoCliente();
         btnQuitar.Click += (s, e) => SeleccionarCliente(0, ClienteGeneral);
 
-        _tipoFactura.Font = Tema.FNegrita;
-        _tipoFactura.Width = Tema.Px(190);
-        _tipoFactura.Margin = new Padding(0, Tema.Px(6), Tema.Px(20), 0);
-        _tipoFactura.SelectedIndexChanged += (s, e) => ActualizarTotales();
+        _tipoFactura.MinimumSize = new Size(Tema.Px(150), Tema.Px(38));
+        _tipoFactura.Click += (s, e) => MostrarTipos();
 
         accionesCliente.Controls.Add(btnBuscar);
         accionesCliente.Controls.Add(btnNuevo);
@@ -370,6 +370,31 @@ public sealed class NuevaFacturaView : UserControl
     // ------------------------------------------------------------------
     //  Cliente
     // ------------------------------------------------------------------
+    private void MostrarTipos()
+    {
+        if (_menuTipos == null)
+        {
+            _menuTipos = new ContextMenuStrip
+            {
+                Font = Tema.FNegrita,
+                ForeColor = Tema.Cafe,
+                BackColor = Tema.Menta,
+                ShowImageMargin = false,
+                Renderer = new ToolStripProfessionalRenderer(new TablaColoresTema())
+            };
+            _menuTipos.Items.Add(Fiscal.ConsumidorFinal, null, (s, e) => ElegirTipo(0));
+            _menuTipos.Items.Add(Fiscal.CreditoFiscal, null, (s, e) => ElegirTipo(1));
+        }
+        _menuTipos.Show(_tipoFactura, new Point(0, _tipoFactura.Height));
+    }
+
+    private void ElegirTipo(int indice)
+    {
+        _tipoIndex = indice;
+        _tipoFactura.Text = (indice == 0 ? Fiscal.ConsumidorFinal : Fiscal.CreditoFiscal) + "  ▾";
+        ActualizarTotales();
+    }
+
     private void BuscarCliente()
     {
         using var d = new BuscarClienteDialog();
@@ -806,7 +831,7 @@ public sealed class NuevaFacturaView : UserControl
         var vendidos = _lineas.AsEnumerable().Select(l => Convert.ToInt32(l["Id"])).ToList();
         _lineas.Rows.Clear();
         SeleccionarCliente(0, ClienteGeneral);
-        _tipoFactura.SelectedIndex = 0;
+        ElegirTipo(0);
         _pago.SelectedIndex = 0;
         CargarProductos();
         Alertas.RevisarProductos(vendidos);       // ¿quedó algún producto con poco stock?
